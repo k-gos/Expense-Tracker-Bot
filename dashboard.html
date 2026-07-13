@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Terminal</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --primary: #58a6ff;
+            --success: #2ea043;
+            --danger: #f85149;
+            --warning: #d29922;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .container { grid-template-columns: 1fr 1fr; }
+            .full-width { grid-column: 1 / -1; }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1, h2, h3 { color: #fff; font-weight: 600; }
+        h1 { font-size: 24px; }
+        h2 { font-size: 18px; margin-bottom: 15px; }
+
+        select {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        .metric {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-fill.danger { background: var(--danger); }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.success { background: var(--success); }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        .budget-row {
+            margin-bottom: 15px;
+        }
+        .budget-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .insights {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .insights p { margin-bottom: 10px; }
+        .insights strong { color: var(--text); }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            max-height: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header full-width">
+            <h1>Expense Terminal</h1>
+            <select id="monthSelector"></select>
+        </div>
+
+        <div class="card full-width">
+            <h2>Overview</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="color: var(--text-muted)">Spent this month</div>
+                    <div class="metric" id="totalSpent">₹0</div>
+                    <div id="budgetStatus" style="font-size: 14px; color: var(--text-muted)"></div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted)">Projected Spend</div>
+                    <div class="metric" id="projectedSpend" style="color: var(--warning)">₹0</div>
+                    <div style="font-size: 14px; color: var(--text-muted)">End of month estimate</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted)">Total Income</div>
+                    <div class="metric" id="totalIncome" style="color: var(--success)">₹0</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div id="mainProgressBar" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Where the money goes</h2>
+            <div id="donutChartContainer" style="height: 250px;"></div>
+            <div id="categoryLedger" style="margin-top: 20px;"></div>
+        </div>
+
+        <div class="card">
+            <h2>Budgets & Alerts</h2>
+            <div id="budgetsList"></div>
+        </div>
+        
+        <div class="card full-width">
+            <h2>Spending Insights</h2>
+            <div class="insights" id="insightsContainer"></div>
+        </div>
+
+        <div class="card full-width">
+            <h2>Recent Activity</h2>
+            <div id="recentActivity"></div>
+        </div>
+    </div>
+
+    <!-- Data script must be loaded directly for offline functionality -->
+    <script src="data.js" onerror="useSampleData()"></script>
+    <script>
+        function useSampleData() {
+            console.log("No data.js found, using sample data");
+            const d = new Date();
+            const currMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+            
+            window.EXPENSE_CONFIG = {
+                currency: "₹",
+                monthlyBudget: 50000,
+                budgets: { food: 10000, travel: 5000, groceries: 15000, luxuries: 5000, clothes: 5000 }
+            };
+            
+            window.EXPENSE_DATA = [
+                { id: 1, date: `${currMonth}-01`, category: 'food', amount: 500, note: 'swiggy', type: 'expense' },
+                { id: 2, date: `${currMonth}-02`, category: 'travel', amount: 300, note: 'uber', type: 'expense' },
+                { id: 3, date: `${currMonth}-05`, category: 'groceries', amount: 2500, note: 'blinkit', type: 'expense' },
+                { id: 4, date: `${currMonth}-06`, category: 'luxuries', amount: 1500, note: 'netflix', type: 'expense' },
+                { id: 5, date: `${currMonth}-07`, category: 'income', amount: 75000, note: 'salary', type: 'income' },
+            ];
+            initDashboard();
+        }
+
+        const formatMoney = (amount) => {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        };
+
+        let currentMonth = '';
+        
+        function initDashboard() {
+            if (!window.EXPENSE_DATA || !window.EXPENSE_CONFIG) return;
+            
+            const months = [...new Set(window.EXPENSE_DATA.map(t => t.date.substring(0, 7)))].sort().reverse();
+            const select = document.getElementById('monthSelector');
+            
+            if (months.length === 0) {
+                const d = new Date();
+                months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`);
+            }
+            
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                const d = new Date(m + '-01');
+                opt.textContent = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                select.appendChild(opt);
+            });
+            
+            currentMonth = months[0];
+            select.value = currentMonth;
+            
+            select.addEventListener('change', (e) => {
+                currentMonth = e.target.value;
+                renderDashboard();
+            });
+            
+            renderDashboard();
+        }
+        
+        function renderDashboard() {
+            const data = window.EXPENSE_DATA.filter(t => t.date.startsWith(currentMonth));
+            const config = window.EXPENSE_CONFIG;
+            
+            const expenses = data.filter(t => t.type === 'expense');
+            const incomes = data.filter(t => t.type === 'income');
+            
+            const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0);
+            const totalIncome = incomes.reduce((sum, t) => sum + t.amount, 0);
+            
+            // Overview
+            document.getElementById('totalSpent').textContent = formatMoney(totalSpent);
+            document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
+            
+            // Progress Bar
+            const budget = config.monthlyBudget || 1;
+            const pct = Math.min((totalSpent / budget) * 100, 100);
+            const bar = document.getElementById('mainProgressBar');
+            bar.style.width = `${pct}%`;
+            bar.className = `progress-fill ${pct > 90 ? 'danger' : (pct > 75 ? 'warning' : 'success')}`;
+            document.getElementById('budgetStatus').textContent = `${formatMoney(totalSpent)} of ${formatMoney(budget)} budget`;
+            
+            // Projected
+            const d = new Date();
+            const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+            const currentDay = Math.max(1, d.getDate());
+            let projected = totalSpent;
+            if (currentMonth === `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`) {
+                projected = (totalSpent / currentDay) * daysInMonth;
+            }
+            document.getElementById('projectedSpend').textContent = formatMoney(projected);
+            
+            // Categories
+            const catTotals = {};
+            expenses.forEach(t => {
+                catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
+            });
+            
+            const sortedCats = Object.entries(catTotals).sort((a,b) => b[1] - a[1]);
+            
+            // Render Budgets
+            const budgetsList = document.getElementById('budgetsList');
+            budgetsList.innerHTML = '';
+            
+            Object.entries(config.budgets || {}).forEach(([cat, limit]) => {
+                if (limit === 0) return;
+                const spent = catTotals[cat] || 0;
+                const p = Math.min((spent / limit) * 100, 100);
+                
+                budgetsList.innerHTML += `
+                    <div class="budget-row">
+                        <div class="budget-header">
+                            <span style="text-transform: capitalize">${cat}</span>
+                            <span>${formatMoney(spent)} / ${formatMoney(limit)}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${p > 90 ? 'danger' : (p > 75 ? 'warning' : '')}" style="width: ${p}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Category Ledger
+            const ledger = document.getElementById('categoryLedger');
+            ledger.innerHTML = sortedCats.map(([cat, amt]) => `
+                <div class="list-item">
+                    <span style="text-transform: capitalize">${cat}</span>
+                    <span>${formatMoney(amt)} <span style="color: var(--text-muted); font-size: 12px">(${((amt/totalSpent)*100).toFixed(1)}%)</span></span>
+                </div>
+            `).join('');
+            
+            // Recent Activity
+            document.getElementById('recentActivity').innerHTML = data.slice(0, 10).map(t => `
+                <div class="list-item">
+                    <div>
+                        <div style="text-transform: capitalize; font-weight: 500">${t.category}</div>
+                        <div style="font-size: 12px; color: var(--text-muted)">${t.date} - ${t.note}</div>
+                    </div>
+                    <div style="color: ${t.type === 'income' ? 'var(--success)' : 'inherit'}; font-weight: 600">
+                        ${t.type === 'income' ? '+' : '-'}${formatMoney(t.amount)}
+                    </div>
+                </div>
+            `).join('');
+
+            // Insights
+            const insightsContainer = document.getElementById('insightsContainer');
+            let insightsHtml = '';
+            
+            if (sortedCats.length > 0) {
+                const biggest = sortedCats[0];
+                const save20 = (biggest[1] * 0.2) * 12;
+                insightsHtml += `<p>📉 Your biggest expense is <strong>${biggest[0]}</strong>. Cutting this by 20% would save you <strong>${formatMoney(save20)}</strong> per year.</p>`;
+            }
+            
+            const discretionary = ['food', 'luxuries', 'clothes'].reduce((sum, cat) => sum + (catTotals[cat] || 0), 0);
+            if (totalSpent > 0) {
+                insightsHtml += `<p>🎭 Discretionary spending (Food, Luxuries, Clothes) makes up <strong>${((discretionary/totalSpent)*100).toFixed(1)}%</strong> of your expenses.</p>`;
+            }
+            
+            insightsContainer.innerHTML = insightsHtml || '<p>Not enough data for insights yet.</p>';
+
+            // Simple Donut SVG Draw
+            drawDonut(sortedCats, totalSpent);
+        }
+
+        function drawDonut(categories, total) {
+            const container = document.getElementById('donutChartContainer');
+            if(total === 0 || categories.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding-top: 50px;">No expenses</div>';
+                return;
+            }
+            
+            const colors = ['#58a6ff', '#2ea043', '#d29922', '#f85149', '#8957e5', '#ff7b72', '#a5d6ff', '#7ee787'];
+            let svg = '<svg viewBox="0 0 100 100">';
+            let cumulativePercent = 0;
+            
+            categories.forEach(([cat, val], i) => {
+                const percent = val / total;
+                const startAngle = cumulativePercent * 2 * Math.PI;
+                cumulativePercent += percent;
+                const endAngle = cumulativePercent * 2 * Math.PI;
+                
+                const startX = 50 + 40 * Math.cos(startAngle);
+                const startY = 50 + 40 * Math.sin(startAngle);
+                const endX = 50 + 40 * Math.cos(endAngle);
+                const endY = 50 + 40 * Math.sin(endAngle);
+                
+                const largeArcFlag = percent > 0.5 ? 1 : 0;
+                const color = colors[i % colors.length];
+                
+                if (percent === 1) {
+                    svg += `<circle cx="50" cy="50" r="40" fill="transparent" stroke="${color}" stroke-width="15" />`;
+                } else {
+                    svg += `<path d="M ${startX} ${startY} A 40 40 0 ${largeArcFlag} 1 ${endX} ${endY}" 
+                            fill="transparent" stroke="${color}" stroke-width="15" />`;
+                }
+            });
+            svg += '</svg>';
+            container.innerHTML = svg;
+        }
+
+        window.addEventListener('load', () => {
+            if(window.EXPENSE_DATA) initDashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+{
+  "telegram_token": "YOUR_TELEGRAM_TOKEN_HERE",
+  "allowed_chat_id": "YOUR_CHAT_ID_HERE",
+  "dashboard_username": "admin",
+  "dashboard_password": "ChangeThisPassword123!",
+  "currency": "\u20b9",
+  "monthlyBudget": 50000,
+  "budgets": {
+    "food": 10000,
+    "travel": 5000,
+    "groceries": 15000,
+    "luxuries": 5000,
+    "clothes": 4500.0,
+    "rent": 0,
+    "bills": 5000,
+    "investments": 0,
+    "health": 2000,
+    "education": 0,
+    "money given": 3000,
+    "money borrowed": 0,
+    "other": 0
+  },
+  "category_keywords": {
+    "travel": [
+      "ola",
+      "uber",
+      "rapido",
+      "metro",
+      "cab",
+      "rickshaw",
+      "auto",
+      "train",
+      "flight",
+      "bus",
+      "petrol",
+      "diesel"
+    ],
+    "food": [
+      "swiggy",
+      "zomato",
+      "chai",
+      "lunch",
+      "dinner",
+      "breakfast",
+      "restaurant",
+      "cafe",
+      "coffee",
+      "food"
+    ],
+    "groceries": [
+      "blinkit",
+      "zepto",
+      "instamart",
+      "bigbasket",
+      "milk",
+      "vegetables",
+      "fruits",
+      "grocery"
+    ],
+    "clothes": [
+      "myntra",
+      "shirt",
+      "pant",
+      "tshirt",
+      "jeans",
+      "shoes",
+      "clothes"
+    ],
+    "rent": [
+      "rent",
+      "deposit"
+    ],
+    "bills": [
+      "electricity",
+      "water",
+      "wifi",
+      "internet",
+      "phone",
+      "recharge",
+      "bill"
+    ],
+    "luxuries": [
+      "netflix",
+      "gym",
+      "movie",
+      "prime",
+      "spotify",
+      "party",
+      "club",
+      "luxury"
+    ],
+    "investments": [
+      "sip",
+      "etf",
+      "stocks",
+      "mutual fund",
+      "zerodha",
+      "groww",
+      "investment"
+    ],
+    "health": [
+      "medicine",
+      "doctor",
+      "pharmacy",
+      "hospital",
+      "clinic",
+      "test",
+      "health"
+    ],
+    "education": [
+      "course",
+      "book",
+      "tuition",
+      "school",
+      "college",
+      "fees",
+      "education"
+    ],
+    "money given": [
+      "given",
+      "lent",
+      "lent to",
+      "gave"
+    ],
+    "money borrowed": [
+      "took",
+      "borrowed",
+      "owed",
+      "took from"
+    ]
+  },
+  "income_keywords": [
+    "salary",
+    "refund",
+    "cashback",
+    "received",
+    "credited",
+    "got",
+    "income"
+  ]
+}
