@@ -55,10 +55,10 @@ def parse_message(message):
     # Check for split
     split_people = []
     if " me, " in note or " me " in note and (" and " in note or "," in note):
-        parts = re.split(r'me\s*[,|and]', note)
+        parts = re.split(r'me\s*(?:,|and)\s*', note)
         if len(parts) > 1:
             people_str = parts[1]
-            split_people = [p.strip() for p in re.split(r',|and', people_str) if p.strip()]
+            split_people = [p.strip() for p in re.split(r',|\band\b', people_str) if p.strip()]
             
     return {
         "amount": amount,

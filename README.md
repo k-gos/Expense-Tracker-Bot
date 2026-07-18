@@ -19,7 +19,7 @@ Data is stored in a lightweight SQLite database. The architecture is designed to
 ## Key Features
 - **Natural Language Processing:** Parses messy strings into structured JSON `{amount, category, note, type}`.
 - **Automated Bill Splitting:** `"paid 600 for cab me, alice, bob"` splits the bill 3 ways, logs your share as an expense, and logs the rest under `money given`.
-- **Dynamic Learning:** Train the bot dynamically via Telegram. Command `/addkeyword food dominos` permanently updates the JSON config.
+- **Dynamic Learning:** Train the bot dynamically via Telegram. Command `/addkeyword dominos` lets you map 'dominos' to an existing category, permanently updating the config.
 - **On-the-fly Budgets:** Command `/addbudget travel 8000` updates your monthly limits instantly.
 - **Strict Security:** 
   - Bot ignores all messages except from your exact Telegram `Chat ID`.
@@ -105,5 +105,5 @@ You should see `{"ok":true,"result":true,"description":"Webhook was set"}`.
 - `/total` - View your total spend vs monthly budget limit.
 - `/budget` - View all active category limits.
 - `/addbudget <category> <amount>` - Set or update a monthly cap.
-- `/addkeyword <category> <word>` - Teach the NLP parser a new keyword.
+- `/addkeyword <word>` - Teach the NLP parser a new keyword interactively.
 - `/undo` - Deletes your most recent transaction.
